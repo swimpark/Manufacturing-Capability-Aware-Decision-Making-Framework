@@ -12,8 +12,11 @@ data/01_supplier_identification/main_split_70_30/
 ├── train_dataset_without_quantity.csv
 └── test_dataset_without_quantity.csv
 data/voxel_geometry/              # 2,147 BINVOX geometry files
+data/Component_binvox.Zip         # Original Train/Test/Total voxel archive
 requirements.txt
 ```
+
+`Component_binvox.Zip` is included unchanged as a convenience copy of the supplied voxel archive. It contains 4,985 BINVOX entries organized under `Train/`, `Test/`, and `Total/`, plus the two original `__temp_filtered.csv` files.
 
 The quantity-free CSVs retain the quantity columns for schema compatibility, but the Stage 1 model does not use quantity as a supplier-identification signal. In the test CSV, `Supplier` may contain a comma-separated set of feasible suppliers.
 

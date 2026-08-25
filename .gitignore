@@ -13,6 +13,7 @@
 
 # Stage 1 data: quantity-free CSVs and BINVOX geometry
 /data/*
+!/data/Component_binvox.Zip
 !/data/voxel_geometry/
 !/data/01_supplier_identification/
 /data/01_supplier_identification/*
