@@ -1,0 +1,31 @@
+# This repository intentionally publishes only the Stage 1 subset.
+/*
+!/.gitignore
+!/README.md
+!/requirements.txt
+!/code/
+!/data/
+
+# Stage 1 source code
+/code/*
+!/code/00_training/
+!/code/01_supplier_identification/
+
+# Only the quantity-free train/test CSV files
+/data/*
+!/data/01_supplier_identification/
+/data/01_supplier_identification/*
+!/data/01_supplier_identification/main_split_70_30/
+/data/01_supplier_identification/main_split_70_30/*
+!/data/01_supplier_identification/main_split_70_30/train_dataset_without_quantity.csv
+!/data/01_supplier_identification/main_split_70_30/test_dataset_without_quantity.csv
+
+# Local outputs and large/raw inputs
+*.pth
+*.pt
+*.binvox
+__pycache__/
+.ipynb_checkpoints/
+logs/
+*.tfevents.*
+.DS_Store
