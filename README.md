@@ -7,7 +7,7 @@ This private repository contains the Stage 1 model-training and supplier-identif
 ```text
 code/
 ├── 00_training/                 # Autoencoder training and embedding extraction
-└── 01_supplier_identification/  # Supplier retrieval and evaluation
+└── 01_supplier_identification/  # Proposed retrieval plus disabled benchmark methods
 data/01_supplier_identification/main_split_70_30/
 ├── train_dataset_without_quantity.csv
 └── test_dataset_without_quantity.csv

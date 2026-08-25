@@ -3,6 +3,7 @@
 # %%
 # histogram_baseline_retriever.py
 # -*- coding: utf-8 -*-
+# BENCHMARK ONLY: histogram-based comparison method; not part of the proposed model.
 
 import os
 import re

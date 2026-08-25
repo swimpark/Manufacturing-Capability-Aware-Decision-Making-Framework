@@ -149,7 +149,7 @@ After generating embeddings, run:
 ../01_supplier_identification/02_tune_neighbor_threshold.ipynb
 ```
 
-`01_evaluate_supplier_identification.ipynb` compares Baseline 1, Baseline 2, and the proposed embedding-based method. `02_tune_neighbor_threshold.ipynb` evaluates identification performance across neighbor-threshold values, `K`.
+`01_evaluate_supplier_identification.ipynb` runs the proposed embedding-based method. The product-type and histogram methods are retained as benchmarks, but their imports and evaluation paths are disabled by default. `02_tune_neighbor_threshold.ipynb` evaluates the proposed method across neighbor-threshold values, `K`; its histogram benchmark path is also disabled by default.
 
 ## Environment
 

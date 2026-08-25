@@ -3,6 +3,7 @@
 # %%
 # #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# BENCHMARK ONLY: product-type comparison method; not part of the proposed model.
 """
 Baseline 1 Retrieval: Product-type based supplier selection
 
