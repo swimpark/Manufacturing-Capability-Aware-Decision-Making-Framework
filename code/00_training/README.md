@@ -38,7 +38,7 @@ The model jointly processes a 3D voxel representation and manufacturing metadata
 - `01_train_multimodal_autoencoder.ipynb`: trains the multimodal autoencoder and saves checkpoints.
 - `02_extract_supplier_embeddings.ipynb`: loads a checkpoint and generates train/test embeddings.
 - `multimodal_autoencoder.py`: defines the shape encoder/decoder, metric encoder/decoder, and `MultiModalAutoencoder`.
-- `voxel_dataset.py`: loads cached `.pt` tensors for embedding extraction, with optional BINVOX support.
+- `voxel_dataset.py`: loads BINVOX geometry as PyTorch tensors during embedding extraction.
 - `binvox_io.py`: provides BINVOX input/output utilities.
 - `training_config.py`: defines the default epochs, learning rate, batch size, and related settings.
 - `checkpoints/`: stores locally generated model weights; `*.pth` files are excluded from Git.
@@ -65,18 +65,13 @@ The code links CSV rows to voxel files using either the `filename` or `FileName`
 
 The embedding-extraction CSV also requires a `Supplier` column containing the supplier label or feasible supplier set.
 
-Cached voxel tensors are excluded because of their size. By default, both notebooks expect the following external directory relative to the repository root:
+Both notebooks read the included BINVOX geometry from the following repository-relative directory:
 
 ```text
-../../../GRA/3D_Voxel/Total_Dataset/
+data/voxel_geometry/
 ```
 
-- The training notebook uses `pt_cache/*.pt` under this directory.
-- The embedding-extraction notebook uses the same `pt_cache/*.pt` files.
-
-The original `.binvox` files are not required. Each CSV voxel name is mapped by stem; for example, `Bearing_10_Ball__1.binvox` maps to `pt_cache/Bearing_10_Ball__1.pt`. Each cached tensor must represent a `128 x 128 x 128` voxel grid, with an optional leading channel dimension.
-
-Update the `voxel_dir` value in each notebook if the voxel data are stored elsewhere.
+The `filename` or `FileName` value in each CSV row must match a file in this directory. The loader expands each BINVOX file into a `1 x 128 x 128 x 128` float32 tensor at runtime. Cached `.pt` tensors are not used.
 
 ## 1. Train the autoencoder
 
@@ -167,5 +162,5 @@ Run the notebooks from either the repository root or `code/00_training`. CUDA is
 ## Notes
 
 - Trained checkpoints (`*.pth`) are excluded through `.gitignore`.
-- Without the complete cached voxel tensor set, the model cannot be retrained and embeddings cannot be regenerated.
+- The complete BINVOX set under `data/voxel_geometry/` is required for retraining and embedding regeneration.
 - A locally generated or separately supplied `.pth` file must be used with the `MultiModalAutoencoder` architecture defined in `multimodal_autoencoder.py`.

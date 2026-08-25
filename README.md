@@ -11,6 +11,7 @@ code/
 data/01_supplier_identification/main_split_70_30/
 ├── train_dataset_without_quantity.csv
 └── test_dataset_without_quantity.csv
+data/voxel_geometry/              # 2,147 BINVOX geometry files
 requirements.txt
 ```
 
@@ -22,19 +23,16 @@ The repository intentionally excludes:
 
 - trained checkpoints (`*.pth`);
 - cached voxel tensors (`*.pt`);
-- raw voxel geometry (`*.binvox`);
 - precomputed embedding CSVs;
 - Stage 2/3 and robustness-analysis files.
 
-Consequently, the included CSV files alone are not sufficient for full retraining. Provide a `pt_cache/` directory containing one cached tensor for each voxel name referenced by the CSV `filename` or `FileName` column. For example, `Bearing_10_Ball__1.binvox` maps to `pt_cache/Bearing_10_Ball__1.pt`. Both training and embedding extraction use these cached tensors, so the original BINVOX files are not required. Training creates a checkpoint locally, and embedding extraction uses that checkpoint to generate the CSVs consumed directly by the supplier-identification notebooks.
+The repository includes the BINVOX geometry referenced by the train/test CSVs. Both training and embedding extraction read `data/voxel_geometry/*.binvox` directly, so no external voxel path or cached `.pt` tensors are required. Training creates a checkpoint locally, and embedding extraction uses that checkpoint to generate the CSVs consumed directly by the supplier-identification notebooks.
 
 ## Workflow
 
-1. Place the external `pt_cache/` directory under an accessible voxel-data directory.
-2. Update `voxel_dir` in both notebooks under `code/00_training/` if necessary.
-3. Run `01_train_multimodal_autoencoder.ipynb` using `train_dataset_without_quantity.csv`.
-4. Run `02_extract_supplier_embeddings.ipynb` to generate train/test embeddings.
-5. Run the notebooks under `code/01_supplier_identification/`.
+1. Run `01_train_multimodal_autoencoder.ipynb` using `train_dataset_without_quantity.csv` and the included BINVOX files.
+2. Run `02_extract_supplier_embeddings.ipynb` to generate train/test embeddings.
+3. Run the notebooks under `code/01_supplier_identification/`.
 
 See `code/00_training/README.md` for model inputs, checkpoint behavior, and detailed execution notes.
 

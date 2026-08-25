@@ -11,8 +11,9 @@
 !/code/00_training/
 !/code/01_supplier_identification/
 
-# Only the quantity-free train/test CSV files
+# Stage 1 data: quantity-free CSVs and BINVOX geometry
 /data/*
+!/data/voxel_geometry/
 !/data/01_supplier_identification/
 /data/01_supplier_identification/*
 !/data/01_supplier_identification/main_split_70_30/
@@ -23,7 +24,6 @@
 # Local outputs and large/raw inputs
 *.pth
 *.pt
-*.binvox
 code/00_training/checkpoints/
 __pycache__/
 .ipynb_checkpoints/
