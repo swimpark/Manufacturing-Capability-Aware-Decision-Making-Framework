@@ -26,12 +26,12 @@ The repository intentionally excludes:
 - precomputed embedding CSVs;
 - Stage 2/3 and robustness-analysis files.
 
-Consequently, the included CSV files alone are not sufficient for full retraining. To train the autoencoder, provide the voxel data referenced by the CSV `FileName` column. Training creates a checkpoint locally; embedding extraction then uses that checkpoint and the raw voxel files to generate the CSVs required by the supplier-identification notebooks.
+Consequently, the included CSV files alone are not sufficient for full retraining. Provide a `pt_cache/` directory containing one cached tensor for each voxel name referenced by the CSV `filename` or `FileName` column. For example, `Bearing_10_Ball__1.binvox` maps to `pt_cache/Bearing_10_Ball__1.pt`. Both training and embedding extraction use these cached tensors, so the original BINVOX files are not required. Training creates a checkpoint locally, and embedding extraction uses that checkpoint to generate the CSVs consumed directly by the supplier-identification notebooks.
 
 ## Workflow
 
-1. Place the external voxel dataset in an accessible directory.
-2. Update the voxel path in `code/00_training/01_train_multimodal_autoencoder.ipynb` if necessary.
+1. Place the external `pt_cache/` directory under an accessible voxel-data directory.
+2. Update `voxel_dir` in both notebooks under `code/00_training/` if necessary.
 3. Run `01_train_multimodal_autoencoder.ipynb` using `train_dataset_without_quantity.csv`.
 4. Run `02_extract_supplier_embeddings.ipynb` to generate train/test embeddings.
 5. Run the notebooks under `code/01_supplier_identification/`.

@@ -38,7 +38,7 @@ The model jointly processes a 3D voxel representation and manufacturing metadata
 - `01_train_multimodal_autoencoder.ipynb`: trains the multimodal autoencoder and saves checkpoints.
 - `02_extract_supplier_embeddings.ipynb`: loads a checkpoint and generates train/test embeddings.
 - `multimodal_autoencoder.py`: defines the shape encoder/decoder, metric encoder/decoder, and `MultiModalAutoencoder`.
-- `voxel_dataset.py`: converts `.binvox` files to PyTorch tensors during embedding extraction.
+- `voxel_dataset.py`: loads cached `.pt` tensors for embedding extraction, with optional BINVOX support.
 - `binvox_io.py`: provides BINVOX input/output utilities.
 - `training_config.py`: defines the default epochs, learning rate, batch size, and related settings.
 - `checkpoints/`: stores locally generated model weights; `*.pth` files are excluded from Git.
@@ -65,14 +65,16 @@ The code links CSV rows to voxel files using either the `filename` or `FileName`
 
 The embedding-extraction CSV also requires a `Supplier` column containing the supplier label or feasible supplier set.
 
-Raw voxel data are excluded because of their size. By default, the notebooks expect the following external directory relative to the repository root:
+Cached voxel tensors are excluded because of their size. By default, both notebooks expect the following external directory relative to the repository root:
 
 ```text
 ../../../GRA/3D_Voxel/Total_Dataset/
 ```
 
 - The training notebook uses `pt_cache/*.pt` under this directory.
-- The embedding-extraction notebook uses the `.binvox` files under this directory.
+- The embedding-extraction notebook uses the same `pt_cache/*.pt` files.
+
+The original `.binvox` files are not required. Each CSV voxel name is mapped by stem; for example, `Bearing_10_Ball__1.binvox` maps to `pt_cache/Bearing_10_Ball__1.pt`. Each cached tensor must represent a `128 x 128 x 128` voxel grid, with an optional leading channel dimension.
 
 Update the `voxel_dir` value in each notebook if the voxel data are stored elsewhere.
 
@@ -133,12 +135,7 @@ Each output contains three columns:
 | `supplier` | Supplier ID for a training row or feasible supplier set for a test row |
 | `embedding` | 48-dimensional latent vector |
 
-The supplier-identification analysis in the paper uses the following metadata-enriched files:
-
-```text
-train_embeddings_epoch_010_with_metadata.csv
-test_embeddings_epoch_010_with_metadata.csv
-```
+The proposed supplier-identification notebooks consume these generated embedding CSVs directly. Metadata-enriched embedding files are needed only for the disabled benchmark paths and are not part of the default pipeline.
 
 ## 3. Run supplier identification
 
@@ -162,6 +159,7 @@ numpy
 tqdm
 tensorboard
 jupyter
+matplotlib
 ```
 
 Run the notebooks from either the repository root or `code/00_training`. CUDA is used when available; otherwise, the code falls back to the CPU.
@@ -169,5 +167,5 @@ Run the notebooks from either the repository root or `code/00_training`. CUDA is
 ## Notes
 
 - Trained checkpoints (`*.pth`) are excluded through `.gitignore`.
-- Without the complete voxel dataset, the model cannot be retrained and embeddings cannot be regenerated.
+- Without the complete cached voxel tensor set, the model cannot be retrained and embeddings cannot be regenerated.
 - A locally generated or separately supplied `.pth` file must be used with the `MultiModalAutoencoder` architecture defined in `multimodal_autoencoder.py`.

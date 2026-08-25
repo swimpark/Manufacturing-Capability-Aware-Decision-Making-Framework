@@ -113,8 +113,11 @@ def compute_threshold(train_embeddings: torch.Tensor, k: int = 3) -> float:
     """
     Because self-distance is included, k >= 2 is recommended
     """
+    n_train = int(train_embeddings.size(0))
+    if n_train == 0:
+        raise ValueError("Cannot compute a threshold from an empty training set.")
     dists = torch.cdist(train_embeddings, train_embeddings)
-    k_eff = max(2, int(k))
+    k_eff = min(max(1, int(k)), n_train)
     kth = torch.kthvalue(dists, k_eff, dim=1).values
     return kth.mean().item()
 
