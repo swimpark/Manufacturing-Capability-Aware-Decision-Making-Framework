@@ -2,36 +2,11 @@
 # coding: utf-8
 # %%
 # -*- coding: utf-8 -*-
-"""
-Multi-label supplier retrieval evaluation module
-- qty-free embedding, capability-based labels
-- Object-oriented design for reuse in Scenario 2 (MILP optimization, etc.)
+"""Identify feasible suppliers from multimodal embeddings.
 
-Example usage in scenario2.ipynb:
-
-from pathlib import Path
-from proposed_supplier_retriever import MultiLabelSupplierRetriever
-
-BASE = Path.cwd()
-result_path = BASE / "data/01_supplier_identification/main_split_70_30"
-
-train_csv = result_path / "train_embeddings_epoch_010_with_metadata.csv"
-test_csv  = result_path / "test_embeddings_epoch_010_with_metadata.csv"
-
-retriever = MultiLabelSupplierRetriever(
-    train_csv=train_csv,
-    test_csv=test_csv,
-    k_for_threshold=11,
-    require_same_component=False,
-    require_same_assembly=False,
-)
-
-pred_sets, metrics = retriever.run_retrieval(verbose=False)
-
-# Feasible supplier set for each query
-feasible_suppliers_per_query = pred_sets
-test_filenames = retriever.test_filenames
-"""
+Use MultiLabelSupplierRetriever with training and query embedding CSVs.
+Call run_retrieval() to obtain candidate supplier sets and evaluation metrics,
+then get_feasible_suppliers() to pass those sets to downstream allocation."""
 
 import os
 import re
@@ -55,7 +30,7 @@ from sklearn.metrics import (
 # ============================================================
 
 def parse_label_str(x) -> List[int]:
-    """Normalize multiple supplier formats to a list of integers"""
+    """Normalize supplier labels to a list of integer IDs."""
     if pd.isna(x):
         return []
     if isinstance(x, (list, tuple)):
@@ -97,12 +72,7 @@ def parse_assembly_component(filename: str) -> Tuple[str, str]:
 
 
 def canonicalize_component(name: str) -> str:
-    """
-    Normalize component names for comparison
-    - lowercase
-    - keep alphanumeric characters only
-    - leafright, leafleft -> leaf
-    """
+    """Normalize a component name and combine left/right leaf variants."""
     key = re.sub(r"[^a-z0-9]", "", str(name).lower())
     if key in {"leafright", "leafleft"}:
         return "leaf"
@@ -110,9 +80,9 @@ def canonicalize_component(name: str) -> str:
 
 
 def compute_threshold(train_embeddings: torch.Tensor, k: int = 3) -> float:
-    """
-    Because self-distance is included, k >= 2 is recommended
-    """
+    """Average the k-th nearest distances within the training set.
+
+    Self-distances are included, so k >= 2 is recommended."""
     n_train = int(train_embeddings.size(0))
     if n_train == 0:
         raise ValueError("Cannot compute a threshold from an empty training set.")
@@ -191,10 +161,7 @@ class MultiLabelSupplierRetriever:
 
     @staticmethod
     def _load_embeddings_from_csv(path: Path):
-        """
-        embeddings CSV:
-          - filename
-        """
+        """Load embeddings, supplier labels, and optional filenames from a CSV."""
         df = pd.read_csv(path)
 
         embeddings = torch.tensor(
@@ -219,14 +186,14 @@ class MultiLabelSupplierRetriever:
             self._load_embeddings_from_csv(self.test_csv)
 
     def _prepare_product_meta(self):
-        # train assembly / component
+        # Parse assembly and component names in the training set.
         train_ac = [parse_assembly_component(fn) for fn in self.train_filenames]
         self.train_assemblies = [a for a, c in train_ac]
         self.train_components_norm = [
             canonicalize_component(c) for a, c in train_ac
         ]
 
-        # test assembly / component
+        # Parse assembly and component names in the test set.
         self.test_ac = [parse_assembly_component(fn) for fn in self.test_filenames]
 
     def _compute_default_threshold(self):
@@ -246,10 +213,7 @@ class MultiLabelSupplierRetriever:
         log_top: int = 5,
         verbose: bool = False,
     ) -> Tuple[List[Set[int]], Dict[str, Any]]:
-        """
-
-        ----
-        """
+        """Retrieve candidate suppliers and return their sets with evaluation metrics."""
         if threshold is None:
             threshold = self.threshold
 
@@ -353,7 +317,7 @@ class MultiLabelSupplierRetriever:
                 total_correct += correct_cnt
                 total_above += total_cnt
 
-        # Supplier-wise metrics (multi-label)
+        # Compute supplier-level metrics for multilabel predictions.
         report_data = []
         for s in all_suppliers:
             binary_gts = [1 if s in gts else 0 for gts in self.test_labels]
@@ -383,7 +347,7 @@ class MultiLabelSupplierRetriever:
             print("\nAverage Metrics Across All Suppliers")
             print(f"Precision: {avg_p:.4f} | Recall: {avg_r:.4f} | F1-score: {avg_f1:.4f} | Accuracy: {avg_acc:.4f}")
 
-        # Product-matching Quality @ τ
+        # Evaluate product-matching quality at the retrieval threshold.
         if queries_with_above == 0 or total_above == 0:
             if verbose:
                 print("\nProduct-matching Quality @ threshold τ")
@@ -459,19 +423,17 @@ class MultiLabelSupplierRetriever:
         return self.predicted_sets, metrics
 
     # ---------------------------
-    # Utilities for Scenario 2
+    # Access retrieval results for downstream allocation.
     # ---------------------------
 
     def get_feasible_suppliers(self) -> List[Set[int]]:
-        """
-        """
+        """Return the candidate supplier sets from the most recent retrieval run."""
         if not self.predicted_sets:
             raise RuntimeError("Operation failed or required precondition is missing.")
         return self.predicted_sets
 
     def get_test_info_dataframe(self) -> pd.DataFrame:
-        """
-        """
+        """Summarize query identities, reference suppliers, and predicted suppliers."""
         if not self.predicted_sets:
             raise RuntimeError("Operation failed or required precondition is missing.")
 

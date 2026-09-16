@@ -99,7 +99,7 @@ def compute_tol_reject_qty_exact(
     return float(reject_qty)
 
 def run_stage2_for_model(model_name: str, train_df: pd.DataFrame, test_df: pd.DataFrame, feasible_suppliers_per_query):
-    # --- train columns
+    # Identify the training-data columns.
     col_sup_train  = find_col(train_df, ["supplier", "Supplier"])
     col_file_train = find_col(train_df, ["filename", "Filename", "FileName"])
     col_cap_train  = find_col(train_df, ["Capacity", "capacity", "Quantity (Ea)", "quantity"])
@@ -108,14 +108,14 @@ def run_stage2_for_model(model_name: str, train_df: pd.DataFrame, test_df: pd.Da
     col_time_train = find_col(train_df, ["Time", "unit_time", "GT_time", "gt_time", "Mfg_Time", "mfg_time", "time"])
     col_tol_train  = find_col(train_df, ["Tolerance", "tolerance", "Tol", "tol"])
 
-    # --- test columns
+    # Identify the query-data columns.
     col_demand        = find_col(test_df, ["Demand", "demand"])
     col_filename_test = find_col(test_df, ["filename", "Filename", "FileName"])
     col_gt_cost       = find_col(test_df, ["GT_Cost", "GT_cost", "gt_cost"])
     col_gt_time       = find_col(test_df, ["GT_Time", "GT_time", "gt_time"])
     col_req_tol       = find_col(test_df, ["Tolerance", "tolerance", "Req_Tolerance", "req_tolerance", "GT_Tolerance", "gt_tolerance", "Tol", "tol"])
 
-    # --- supplier_comp_params: capacity=max, cost/time keep first
+    # Use the maximum capacity and the first cost/time values for each supplier-component pair.
     supplier_comp_params = {}
     for _, row in train_df.iterrows():
         sup = int(row[col_sup_train])
@@ -133,7 +133,7 @@ def run_stage2_for_model(model_name: str, train_df: pd.DataFrame, test_df: pd.Da
         else:
             supplier_comp_params[key]["capacity"] = max(supplier_comp_params[key]["capacity"], cap)
 
-    # --- supplier_comp_tol_cap: min achieved tolerance per (supplier, component_key)
+    # Use the minimum achieved tolerance for each supplier-component pair.
     supplier_comp_tol_cap = (
         train_df
         .assign(component_key=lambda df: df[col_file_train].apply(lambda fn: canonicalize_component(parse_assembly_component(fn)[1])))
@@ -142,7 +142,7 @@ def run_stage2_for_model(model_name: str, train_df: pd.DataFrame, test_df: pd.Da
         .to_dict()
     )
 
-    # --- feasible normalize
+    # Normalize candidate supplier sets to one entry per query.
     nQ = len(test_df)
     feasible_list = feasible_to_list(feasible_suppliers_per_query, nQ=nQ)
 
@@ -161,7 +161,7 @@ def run_stage2_for_model(model_name: str, train_df: pd.DataFrame, test_df: pd.Da
 
         feas = feasible_list[q]
 
-        # MILP unmet penalty: C_max among active suppliers
+        # Scale the unmet-demand penalty by the largest active supplier unit cost.
         active_costs = [
             supplier_comp_params[(s, comp_key)]["cost"]
             for s in feas
@@ -190,7 +190,7 @@ def run_stage2_for_model(model_name: str, train_df: pd.DataFrame, test_df: pd.Da
                 supplier_comp_tol_cap=supplier_comp_tol_cap,
             )
 
-        # Per-unit GT cost (for reference, but we use ratio-based penalty)
+        # Ground-truth unit cost and time; effective penalties below use demand ratios.
         gt_cost_u = (gt_cost / demand) if (demand > 0) else 0.0
         gt_time_u = (gt_time / demand) if (demand > 0) else 0.0
 
@@ -201,16 +201,16 @@ def run_stage2_for_model(model_name: str, train_df: pd.DataFrame, test_df: pd.Da
         qual_deficiency_ratio = (float(reject_qty) / demand) if (demand > 0) else 0.0
         qual_deficiency_ratio = float(min(1.0, max(0.0, qual_deficiency_ratio)))
 
-        # Infeasible qty ratio = (unmet + reject) / demand (combined infeasibility, accurate sum)
+        # Combine unmet and quality-deficient quantities, then divide by demand.
         total_infeasible_qty = float(unmet_qty) + float(reject_qty) if np.isfinite(unmet_qty) else float(reject_qty)
         infeasible_qty_ratio = (total_infeasible_qty / demand) if (demand > 0) else 0.0
         infeasible_qty_ratio = float(min(1.0, max(0.0, infeasible_qty_ratio)))
 
-        # Unified penalty using infeasible_qty_ratio: ALPHA_COST * infeasible_ratio * gt_cost
+        # Scale each ground-truth reference objective by the infeasible-demand ratio and its penalty weight.
         penalty_infeasible_cost = ALPHA_COST * infeasible_qty_ratio * gt_cost
         penalty_infeasible_time = BETA_TIME * infeasible_qty_ratio * gt_time
 
-        # Effective cost = predicted cost + penalty from infeasibility
+        # Add infeasibility penalties to the predicted cost and time.
         effective_cost = (float(pred_cost) + float(penalty_infeasible_cost)) if np.isfinite(pred_cost) else np.nan
         effective_time = (float(pred_time) + float(penalty_infeasible_time)) if np.isfinite(pred_time) else np.nan
 

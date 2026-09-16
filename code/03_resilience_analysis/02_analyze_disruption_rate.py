@@ -116,7 +116,7 @@ def process_single_query(args):
     u_gt_c = (gt_c / demand) if demand > 0 else 0.0
     u_gt_t = (gt_t / demand) if demand > 0 else 0.0
 
-    # Effective = (pred + penalty) / GT
+    # Normalize the predicted objective plus its penalty by the ground-truth objective.
     eff_c = (p_c + (uc_c + uq_c) * float(alpha_val) * u_gt_c) / gt_c if gt_c > 0 else float(alpha_val)
     eff_t = (p_t + (uc_t + uq_t) * float(alpha_val) * u_gt_t) / gt_t if gt_t > 0 else float(alpha_val)
 

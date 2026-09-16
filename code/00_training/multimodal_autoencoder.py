@@ -1,4 +1,4 @@
-# autoencoder_model_Unet10_lat48.py
+# Multimodal autoencoder with a 48-dimensional latent representation.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -95,9 +95,7 @@ class MetricsEncoder(nn.Module):
 
 
 class ShapeDecoder(nn.Module):
-    """
-    z_dim = 48
-    """
+    """Reconstruct voxel geometry from the latent representation and encoder skip features."""
     def __init__(self, in_channels=512, dim=128, z_dim=48, out_channels=1):
         super().__init__()
         torch.manual_seed(3)
@@ -238,8 +236,7 @@ class ShapeDecoder(nn.Module):
 
     @torch.no_grad()
     def forward_from_latent(self, z):
-        """
-        """
+        """Decode a latent vector using zero-valued skip features."""
         self.eval()
         b  = z.size(0)
         d8 = self.out_dim        # 8
@@ -282,10 +279,7 @@ class MetricsDecoder(nn.Module):
 
 
 class MultiModalAutoencoder(nn.Module):
-    """
-      x_voxel, t, c, q, tol, m
-      x_logits, (t_hat, c_hat, q_hat, tol_hat, m_hat), zlat
-    """
+    """Encode voxel geometry and manufacturing attributes into a shared latent representation."""
     def __init__(self, normalize_shape: bool = True):
         super().__init__()
         self.shape_enc   = ShapeEncoder(hidden_dim=32, normalize_shape=normalize_shape)
@@ -309,15 +303,14 @@ class MultiModalAutoencoder(nn.Module):
 
     @torch.no_grad()
     def decode_from_latent(self, z: torch.Tensor):
-        """
-        """
+        """Reconstruct geometry and manufacturing attributes from a latent vector."""
         self.eval()
-        # shape
+        # Reconstruct voxel geometry
         if hasattr(self.shape_dec, "forward_from_latent"):
             x_logits = self.shape_dec.forward_from_latent(z)
         else:
             raise RuntimeError("Operation failed or required precondition is missing.")
 
-        # metrics
+        # Reconstruct manufacturing attributes
         t_hat, c_hat, q_hat, tol_hat, m_hat = self.metrics_dec(z)
         return x_logits, (t_hat, c_hat, q_hat, tol_hat, m_hat)
