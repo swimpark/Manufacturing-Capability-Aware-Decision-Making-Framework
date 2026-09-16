@@ -1,33 +1,52 @@
-# This repository intentionally publishes only the Stage 1 subset.
+# Publish source and explicitly listed input data only.
 /*
 !/.gitignore
+!/LICENSE
 !/README.md
 !/requirements.txt
 !/code/
 !/data/
 
-# Stage 1 source code
 /code/*
 !/code/00_training/
 !/code/01_supplier_identification/
+!/code/02_supplier_optimization/
+!/code/03_resilience_analysis/
+!/code/common/
 
-# Stage 1 data: quantity-free CSVs and BINVOX geometry
 /data/*
-!/data/Component_binvox.Zip
-!/data/voxel_geometry/
 !/data/01_supplier_identification/
+!/data/02_allocation_inputs/
+!/data/voxel_geometry/
 /data/01_supplier_identification/*
 !/data/01_supplier_identification/main_split_70_30/
 /data/01_supplier_identification/main_split_70_30/*
 !/data/01_supplier_identification/main_split_70_30/train_dataset_without_quantity.csv
 !/data/01_supplier_identification/main_split_70_30/test_dataset_without_quantity.csv
+/data/02_allocation_inputs/*
+!/data/02_allocation_inputs/train_allocation_metadata.csv
+!/data/02_allocation_inputs/test_allocation_metadata.csv
 
-# Local outputs and large/raw inputs
+# Generated artifacts remain local.
 *.pth
 *.pt
-code/00_training/checkpoints/
-__pycache__/
-.ipynb_checkpoints/
+*.ckpt
+*.onnx
+*.npz
+*.npy
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+*.zip
+*.Zip
+checkpoints/
+results/
 logs/
 *.tfevents.*
+__pycache__/
+.ipynb_checkpoints/
+.pulp_temp/
+.venv/
 .DS_Store

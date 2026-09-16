@@ -10,7 +10,7 @@ Multi-label supplier retrieval evaluation module
 Example usage in scenario2.ipynb:
 
 from pathlib import Path
-from supplier_retrieval import MultiLabelSupplierRetriever
+from proposed_supplier_retriever import MultiLabelSupplierRetriever
 
 BASE = Path.cwd()
 result_path = BASE / "data/01_supplier_identification/main_split_70_30"

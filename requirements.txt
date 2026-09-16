@@ -5,4 +5,4 @@ torch
 tensorboard
 tqdm
 jupyter
-matplotlib
+pulp
