@@ -81,6 +81,11 @@ script joins by this ID and checks filenames and supplier labels. It fails if
 rows are missing or identities disagree. Keep the supplied input row order and
 IDs consistent when adapting the dataset.
 
+### Voxel geometry data
+
+The voxel geometry files are included in `data/voxel_geometry/` and are also
+available from the [Georgia Tech Digital Repository](https://repository.gatech.edu/entities/publication/ebb00f26-5572-41c5-b26c-388a33043a52).
+
 ## Calculation behavior
 
 Stage 2 minimizes cost and reports the cost and time of that allocation. Its
