@@ -91,3 +91,10 @@ are preserved from the research source.
 
 Re-training produces new weights and embeddings; this repository does not
 distribute the checkpoint used to obtain the reported paper results.
+
+## License
+
+The combined software is distributed under GPL-3.0-or-later because it includes
+`binvox_io.py` from binvox-rw-py. Original project code also retains its MIT
+permission. See `LICENSE`, `LICENSES/MIT.txt`, and `THIRD_PARTY_NOTICES.md` for
+license terms, attribution, and scope.

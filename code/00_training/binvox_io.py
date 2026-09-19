@@ -1,6 +1,8 @@
 """Read and write BINVOX files.
 
-The write function was adapted by SYP on 2024-10-11."""
+The write function was adapted by SYP on 2024-10-11.
+Comments and documentation were revised, and obsolete commented code was
+removed, on 2026-09-19."""
 
 #  Copyright (C) 2012 Daniel Maturana
 #  This file is part of binvox-rw-py.
