@@ -1,8 +1,13 @@
 # Manufacturing Capability-Aware Decision-Making Framework
 
-Core implementation of the proposed method: multimodal representation learning,
-supplier identification, production allocation, and disruption-responsive
-reconfiguration.
+Code and input data accompanying the study:
+
+Suyoung Park and Shreyes N. Melkote,
+[A manufacturing capability-aware supplier decision framework for resilient production allocation and disruption response](https://doi.org/10.1016/j.jmsy.2026.09.009),
+*Journal of Manufacturing Systems* (2026).
+
+The workflow connects multimodal representation learning, supplier
+identification, production allocation, and disruption-responsive reconfiguration.
 
 ## Repository contents
 
@@ -20,11 +25,10 @@ data/
   voxel_geometry/                2,147 input BINVOX geometries
 ```
 
-This release contains the proposed method's core workflow. Benchmark methods,
-parameter sweeps, robustness experiments, and figure-generation code are outside
-this release. Trained weights, cached tensors, generated embeddings, and saved
-experimental results are excluded. Running the code creates local outputs that
-are ignored by Git.
+This repository provides the proposed method's core workflow and input data.
+The checkpoint used for the paper and saved experimental results are not
+included. Running the workflow generates checkpoints, embeddings, and results
+locally.
 
 ## Setup
 
@@ -46,8 +50,7 @@ Jupyter, in the order shown below.
 
 The first notebook trains for ten epochs and writes local checkpoints. The
 second uses the epoch-10 checkpoint and writes 48-dimensional embeddings.
-The model architecture, training loss, and quantity-fixed-at-zero input are
-retained from the research implementation.
+The quantity input is fixed at zero during training and embedding extraction.
 
 Then run:
 
@@ -59,9 +62,8 @@ python code/03_resilience_analysis/02_analyze_disruption_rate.py
 python code/03_resilience_analysis/03_analyze_capacity_degradation.py
 ```
 
-The default proposed-method threshold is `k=11`. Stage 3 uses 20 random seeds
-for each scenario. Its scripts use multiprocessing and should be run as Python
-scripts, on a compute node with sufficient allocated CPU resources.
+The default Stage 1 threshold parameter is `k=11`. Stage 3 uses 20 random seeds
+per scenario and runs with multiprocessing.
 
 ## Input data and sample identity
 
@@ -72,25 +74,34 @@ different manufacturing attributes.
 The input CSV's `Supplier` field can contain paired feasible supplier labels.
 `train_allocation_metadata.csv` records the assigned supplier for each database
 row, and `test_allocation_metadata.csv` records query demand and ground-truth
-reference targets. These are scenario inputs, extracted without embeddings or
-predictions from the original experiment input tables. The training and test
-tables are shared by Stage 2 and Stage 3.
+reference targets. These metadata tables are shared by Stage 2 and Stage 3.
 
-Embedding extraction retains a `sample_id` for every input row. The preparation
-script joins by this ID and checks filenames and supplier labels. It fails if
-rows are missing or identities disagree. Keep the supplied input row order and
-IDs consistent when adapting the dataset.
+Embeddings and allocation metadata are joined by `sample_id`. Preserve the
+supplied row order and IDs when adapting the dataset.
+
+### Voxel geometry data
+
+The voxel geometry files are included in `data/voxel_geometry/` and are also
+available from the [Georgia Tech Digital Repository](https://repository.gatech.edu/entities/publication/ebb00f26-5572-41c5-b26c-388a33043a52).
 
 ## Calculation behavior
 
-Stage 2 minimizes cost and reports the cost and time of that allocation. Its
-effective scores include capacity-shortage and quality-deficiency penalties;
-cost/time means omit undefined values in the original implementation. Stage 3
-solves cost and time objectives separately. The solver and scoring functions
-are preserved from the research source.
+Stage 1 assesses feasibility for each supplier by comparing the query embedding
+with that supplier's historical production embeddings. The same global
+Euclidean-distance threshold, computed from the training embeddings, is
+applied across suppliers to identify candidates. If no training record falls
+within this threshold, retrieval uses the nearest record as a fallback.
 
-Re-training produces new weights and embeddings; this repository does not
-distribute the checkpoint used to obtain the reported paper results.
+Stage 2 minimizes cost and reports the cost and time of the resulting
+allocation. Stage 3 solves cost and time objectives separately under the
+specified capacity disruptions.
+
+Allocation optimization penalizes unmet demand using the configured weight
+times the largest active supplier unit cost or time. Post-allocation evaluation
+uses its configured weight times the ground-truth value per unit demand to
+penalize unmet and quality-deficient quantities. Effective ratios combine the
+nominal allocation cost or time with these evaluation penalties and divide by
+the corresponding ground-truth total.
 
 ## License
 
